@@ -71,7 +71,7 @@ impl CFG {
         }
     }
 
-    fn derive(&self, s: String, depth: u8) -> Option<Vec<String>> {
+    fn derive(&self, s: &str, depth: u8) -> Option<Vec<String>> {
         if s.len() == 0 {
             return Some(vec!["S".to_string()]);
         }
@@ -80,16 +80,21 @@ impl CFG {
 
         if first == Some(&b'a') && last == Some(&b'b') {
             // Call the function recursively to s[1..s.len() - 1]
-            let mut next = self.derive(String::from(s.get(1..s.len() - 1).unwrap_or("")), depth + 1)?;
+            let mut next = self.derive(s.get(1..s.len() - 1).unwrap_or(""), depth + 1)?;
 
             if depth != 0 {
                 next.push(format!("a{}b", next.last().unwrap()));
             } else {
-                next.push(s.clone());
+                next.push(s.to_string());
             }
             return Some(next);
         }
         None
+    }
+
+    fn membership(&self, s: &str) -> bool {
+        // We can use the derive function implemented earlier
+        self.derive(s, 0).is_some()
     }
 }
 
@@ -102,10 +107,12 @@ fn main() {
         println!("{}", s);
     }
 
-    let test_string = "ab".to_string();
-    if let Some(derivation) = cfg.derive(test_string.clone(), 0) {
+    let test_string: &str = "aaabbb";
+    if let Some(derivation) = cfg.derive(test_string, 0) {
         println!("Derivation for {:?}: {:?}", test_string, derivation);
     } else {
         println!("No derivation found for {:?}", test_string);
     }
+
+    println!("Membership test for {:?}: {}", test_string, cfg.membership(test_string));
 }
