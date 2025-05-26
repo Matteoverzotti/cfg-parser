@@ -70,6 +70,27 @@ impl CFG {
             self.backtrack(s, result, count - 1, max_len);
         }
     }
+
+    fn derive(&self, s: String, depth: u8) -> Option<Vec<String>> {
+        if s.len() == 0 {
+            return Some(vec!["S".to_string()]);
+        }
+        let first: Option<&u8> = s.as_bytes().first();
+        let last: Option<&u8> = s.as_bytes().last();
+
+        if first == Some(&b'a') && last == Some(&b'b') {
+            // Call the function recursively to s[1..s.len() - 1]
+            let mut next = self.derive(String::from(s.get(1..s.len() - 1).unwrap_or("")), depth + 1)?;
+
+            if depth != 0 {
+                next.push(format!("a{}b", next.last().unwrap()));
+            } else {
+                next.push(s.clone());
+            }
+            return Some(next);
+        }
+        None
+    }
 }
 
 fn main() {
@@ -79,5 +100,12 @@ fn main() {
     let random_strings = cfg.generate_random_string(10, 10);
     for s in random_strings {
         println!("{}", s);
+    }
+
+    let test_string = "ab".to_string();
+    if let Some(derivation) = cfg.derive(test_string.clone(), 0) {
+        println!("Derivation for {:?}: {:?}", test_string, derivation);
+    } else {
+        println!("No derivation found for {:?}", test_string);
     }
 }
