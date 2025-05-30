@@ -18,23 +18,43 @@ pub struct BonusCFG {
     _productions: Vec<Production>,
 }
 
-// S -> aSbSc | ε
 impl BonusCFG {
     pub fn build() -> Self {
         let productions = vec![
             Production {
                 lhs: Symbol::NonTerminal('S'),
-                rhs: vec![Symbol::Terminal('a'), Symbol::NonTerminal('S'),
-                        Symbol::Terminal('b'), Symbol::NonTerminal('S'),
-                        Symbol::Terminal('c')]
+                rhs: vec![Symbol::Terminal('a'), Symbol::NonTerminal('A'),
+                        Symbol::Terminal('b'), Symbol::NonTerminal('B'),
+                        Symbol::Terminal('c'), Symbol::NonTerminal('C')]
             },
             Production {
-                lhs: Symbol::NonTerminal('S'),
-                rhs: vec![] // ε = empty production
-            }
+                lhs: Symbol::NonTerminal('A'),
+                rhs: vec![Symbol::Terminal('a'), Symbol::NonTerminal('A')]
+            },
+            Production {
+                lhs: Symbol::NonTerminal('A'),
+                rhs: vec![]
+            },
+            Production {
+                lhs: Symbol::NonTerminal('B'),
+                rhs: vec![Symbol::Terminal('b'), Symbol::NonTerminal('B')]
+            },
+            Production {
+                lhs: Symbol::NonTerminal('B'),
+                rhs: vec![]
+            },
+            Production {
+                lhs: Symbol::NonTerminal('C'),
+                rhs: vec![Symbol::Terminal('c'), Symbol::NonTerminal('C')]
+            },
+            Production {
+                lhs: Symbol::NonTerminal('C'),
+                rhs: vec![]
+            },
         ];
         BonusCFG { 
-            _nonterminals: vec![Symbol::NonTerminal('S')], 
+            _nonterminals: vec![Symbol::NonTerminal('S'), Symbol::NonTerminal('A'), 
+                               Symbol::NonTerminal('B'), Symbol::NonTerminal('C')], 
             _terminals: vec![Symbol::Terminal('a'), Symbol::Terminal('b'), Symbol::Terminal('c')], 
             _start_symbol: Symbol::NonTerminal('S'), 
             _productions: productions 
@@ -53,3 +73,14 @@ impl BonusCFG {
             && s.get(2 * part..n) == Some(&"c".repeat(part))
     }
 }
+
+// The language L = {a^n b^n c^n | n >= 1} is not Context-Free (proof by Pumping Lemma)
+// So no CFG can be built for it
+// However, we can do a close equivalent which is exactly present in this file
+// S -> aAbBcC
+// A -> aA | ε
+// B -> bB | ε
+// C -> cC | ε
+// This grammar correctly generates all words in the language L
+// But unfortunately it can generate other words as well
+// More specifically, it generates a+b+c+.
