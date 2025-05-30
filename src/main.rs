@@ -1,4 +1,7 @@
+mod bonus;
+use bonus::BonusCFG;
 use rand::seq::SliceRandom;
+use std::process::exit;
 
 #[derive(Debug, PartialEq, Eq)]
 enum Symbol {
@@ -14,12 +17,13 @@ struct Production {
 
 #[derive(Debug)]
 struct CFG {
-    nonterminals: Vec<Symbol>,
-    terminals: Vec<Symbol>,
-    start_symbol: Symbol,
-    productions: Vec<Production>,
+    _nonterminals: Vec<Symbol>,
+    _terminals: Vec<Symbol>,
+    _start_symbol: Symbol,
+    _productions: Vec<Production>,
 }
 
+// S -> aSb | ε
 impl CFG {
     fn build() -> Self {
         let productions = vec![
@@ -33,10 +37,10 @@ impl CFG {
             }
         ];
         CFG {
-            nonterminals: vec![Symbol::NonTerminal('S')],
-            terminals: vec![Symbol::Terminal('a'), Symbol::Terminal('b')],
-            start_symbol: Symbol::NonTerminal('S'),
-            productions,
+            _nonterminals: vec![Symbol::NonTerminal('S')],
+            _terminals: vec![Symbol::Terminal('a'), Symbol::Terminal('b')],
+            _start_symbol: Symbol::NonTerminal('S'),
+            _productions: productions,
         }
     }
 
@@ -98,21 +102,66 @@ impl CFG {
     }
 }
 
+fn print_usage() {
+    println!("Usage: cargo run <cfg_type> <cfg_method>");
+    println!("cfg_type: 'cfg' or 'bonus'");
+    println!("cfg_method for 'cfg': 'build', 'generate', 'derive', 'membership'");
+    println!("cfg_method for 'bonus': 'build', 'membership'");
+    exit(1);
+}
+
 fn main() {
-    let cfg = CFG::build();
-    println!("{:#?}", cfg);
+    let cfg_type = std::env::args().nth(1);
+    let cfg_method = std::env::args().nth(2);
 
-    let random_strings = cfg.generate_random_string(10, 10);
-    for s in random_strings {
-        println!("{}", s);
+    if cfg_type == None || cfg_method == None {
+        print_usage();
     }
 
-    let test_string: &str = "aaabbb";
-    if let Some(derivation) = cfg.derive(test_string, 0) {
-        println!("Derivation for {:?}: {:?}", test_string, derivation);
+    // There is surely a cleaner way to implement this
+    // But I'm lazy
+    if cfg_type == Some(String::from("cfg")) {
+        let cfg = CFG::build();
+        let strings = ["aaabbb", "aabbb", "a", "ba"];
+
+        match cfg_method.unwrap().as_str() {
+            "build" => println!("{:#?}", cfg),
+            "generate" => {
+                let random_strings = cfg.generate_random_string(10, 10);
+                for s in random_strings {
+                    println!("{}", s);
+                }
+            },
+            "derive" => {
+                for s in strings {
+                    if let Some(derivation) = cfg.derive(s, 0) {
+                        println!("Derivation for {:?}: {:?}", s, derivation);
+                    } else {
+                        println!("No derivation found for {:?}", s);
+                    }
+                }
+            },
+            "membership" => {
+                for s in strings {
+                    println!("Membership test for {:?}: {}", s, cfg.membership(s));
+                }
+            },
+            _ => print_usage(),
+        }
+    } else if cfg_type == Some(String::from("bonus")) {
+        let bonus_cfg: BonusCFG = BonusCFG::build();
+        let strings = ["bc", "abc", "aabbcc", "acbca", ""];
+        match cfg_method.unwrap().as_str() {
+            "build" => println!("{:#?}", bonus_cfg),
+            "membership" => {
+                for s in strings {
+                    println!("Membership test for {:?}: {}", s, bonus_cfg.membership(s));
+                }
+            },
+            _ => print_usage(),
+        }
     } else {
-        println!("No derivation found for {:?}", test_string);
+        print_usage();
     }
 
-    println!("Membership test for {:?}: {}", test_string, cfg.membership(test_string));
 }
